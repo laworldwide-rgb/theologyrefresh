@@ -497,11 +497,24 @@ function App() {
     }
   }, [level])
 
+  // Handle browser back button — go to level selector, not out of app
+  useEffect(() => {
+    const onPopState = () => {
+      setLevel(null)
+      setMessages([])
+      setSwitchNote(null)
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
+
   const chooseLevel = useCallback((key) => {
     track('level_selected', { level: key })
     setLevel(key)
     setMessages([])
     setSwitchNote(null)
+    // Push a history entry so back button returns here
+    window.history.pushState({ level: key }, '')
   }, [])
 
   const switchLevel = useCallback((key) => {
