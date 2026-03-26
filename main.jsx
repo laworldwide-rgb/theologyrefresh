@@ -20,7 +20,7 @@ const h = React.createElement
 
 // ── Design tokens ─────────────────────────────────────────
 const T = {
-  bg:        '#f9fafb',
+  bg:        '#faf7f2',
   bgSubtle:  '#eef3f9',
   bgMid:     '#dce6f0',
   slate:     '#3d5a7a',
