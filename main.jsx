@@ -199,9 +199,9 @@ const S = {
   },
   systemNote: {
     fontFamily: "'Cormorant Garamond', serif",
-    fontSize: 14, fontStyle: 'italic',
-    color: T.inkLight, textAlign: 'center',
-    padding: '4px 24px 8px', lineHeight: 1.5,
+    fontSize: 17, fontStyle: 'italic',
+    color: T.inkMid, textAlign: 'center',
+    padding: '4px 24px 16px', lineHeight: 1.5,
   },
   switchNotice: {
     display: 'flex', alignItems: 'center', gap: 8,
@@ -234,7 +234,7 @@ const S = {
     padding: '10px 14px',
     borderRadius: role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
     fontFamily: "'Lato', sans-serif",
-    fontSize: 13, fontWeight: 300, lineHeight: 1.65,
+    fontSize: 13, fontWeight: 400, lineHeight: 1.65,
     background: role === 'user' ? T.slate : T.bgSubtle,
     color: role === 'user' ? '#e8f0f9' : T.ink,
     border: role === 'user' ? 'none' : `1px solid ${T.border}`,
@@ -257,9 +257,9 @@ const S = {
   exampleBtn: {
     background: T.bgSubtle,
     border: `1px solid ${T.border}`,
-    borderRadius: 20, padding: '7px 14px',
+    borderRadius: 20, padding: '8px 16px',
     fontFamily: "'Lato', sans-serif",
-    fontSize: 11.5, fontWeight: 300,
+    fontSize: 13, fontWeight: 400,
     color: T.inkMid, cursor: 'pointer',
     textAlign: 'left', transition: 'background 0.15s',
     alignSelf: 'flex-start',
@@ -673,13 +673,13 @@ function App() {
     // ── Chat area ───────────────────────────────────────
     h('div', { style: S.chatArea },
       !hasMessages
-        ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12, flex: 1, justifyContent: 'flex-end' } },
+        ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 28 } },
             h('p', { style: S.systemNote }, cfg.welcome),
             h('div', { style: S.examplesWrap },
               cfg.examples.map((q, i) =>
                 h('button', {
                   key: i,
-                  style: S.exampleBtn,
+                  style: { ...S.exampleBtn, fontWeight: 400, fontSize: 13, color: T.inkMid },
                   onClick: () => sendMessage(q),
                   onMouseEnter: e => { e.currentTarget.style.background = T.skyLight },
                   onMouseLeave: e => { e.currentTarget.style.background = T.bgSubtle },
