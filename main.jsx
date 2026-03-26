@@ -691,8 +691,8 @@ function App() {
       h('div', { ref: bottomRef })
     ),
 
-    // ── Toolbar ─────────────────────────────────────────
-    h('div', { style: S.toolbar },
+    // ── Toolbar — only show when conversation has started ─
+    hasMessages && h('div', { style: S.toolbar },
       h('button', {
         style: S.toolbarBtn,
         onClick: newConversation,
