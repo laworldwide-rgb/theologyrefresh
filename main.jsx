@@ -154,20 +154,20 @@ const S = {
   },
   levelHeadingLine: {
     fontFamily: "'Cormorant Garamond', serif",
-    fontSize: 26, fontWeight: 300, fontStyle: 'italic',
+    fontSize: 30, fontWeight: 300, fontStyle: 'italic',
     color: T.ink, textAlign: 'center',
     lineHeight: 1.25, marginBottom: 4,
   },
   levelSub: {
     fontFamily: "'Lato', sans-serif",
-    fontSize: 12, fontWeight: 300,
+    fontSize: 14, fontWeight: 300,
     color: T.inkLight, textAlign: 'center',
     marginTop: 8, marginBottom: 36,
   },
   levelButtons: { display: 'flex', flexDirection: 'column', gap: 12, width: '100%' },
 
   lvlBtn: (key) => ({
-    width: '100%', padding: '16px 20px',
+    width: '100%', padding: '18px 20px',
     borderRadius: 12,
     background: LEVELS[key].btnBg,
     border: LEVELS[key].btnBorder,
@@ -179,16 +179,16 @@ const S = {
   }),
   lvlBtnName: (key) => ({
     fontFamily: "'Cormorant SC', serif",
-    fontSize: 15, fontWeight: 500, letterSpacing: 1,
-    color: LEVELS[key].btnNameColor, display: 'block', marginBottom: 2,
+    fontSize: 18, fontWeight: 500, letterSpacing: 1,
+    color: LEVELS[key].btnNameColor, display: 'block', marginBottom: 3,
   }),
   lvlBtnDesc: (key) => ({
     fontFamily: "'Lato', sans-serif",
-    fontSize: 11, fontWeight: 300,
+    fontSize: 13, fontWeight: 300,
     color: LEVELS[key].btnDescColor, display: 'block', opacity: 0.8,
   }),
   lvlBtnArrow: (key) => ({
-    fontSize: 16, color: LEVELS[key].btnDescColor, opacity: 0.5, flexShrink: 0,
+    fontSize: 18, color: LEVELS[key].btnDescColor, opacity: 0.5, flexShrink: 0,
   }),
 
   // Chat area
@@ -199,7 +199,7 @@ const S = {
   },
   systemNote: {
     fontFamily: "'Cormorant Garamond', serif",
-    fontSize: 17, fontStyle: 'italic',
+    fontSize: 19, fontStyle: 'italic',
     color: T.inkMid, textAlign: 'center',
     padding: '4px 24px 16px', lineHeight: 1.5,
   },
@@ -209,7 +209,7 @@ const S = {
     borderRadius: 20, alignSelf: 'center',
     border: `1px solid ${T.sky}`,
     fontFamily: "'Lato', sans-serif",
-    fontSize: 10, fontWeight: 700, letterSpacing: 1.5,
+    fontSize: 11, fontWeight: 700, letterSpacing: 1.5,
     textTransform: 'uppercase', color: T.slate,
     flexShrink: 0,
   },
@@ -225,16 +225,16 @@ const S = {
   }),
   bubbleSender: (role) => ({
     fontFamily: "'Cormorant SC', serif",
-    fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+    fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
     marginBottom: 4, paddingLeft: 4, paddingRight: 4,
     color: role === 'user' ? T.slate : T.sage,
   }),
   bubble: (role) => ({
-    maxWidth: '82%',
-    padding: '10px 14px',
+    maxWidth: '85%',
+    padding: '12px 16px',
     borderRadius: role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
     fontFamily: "'Lato', sans-serif",
-    fontSize: 13, fontWeight: 400, lineHeight: 1.65,
+    fontSize: 15, fontWeight: 400, lineHeight: 1.7,
     background: role === 'user' ? T.slate : T.bgSubtle,
     color: role === 'user' ? '#e8f0f9' : T.ink,
     border: role === 'user' ? 'none' : `1px solid ${T.border}`,
@@ -251,15 +251,15 @@ const S = {
 
   // Example questions
   examplesWrap: {
-    display: 'flex', flexDirection: 'column', gap: 6,
+    display: 'flex', flexDirection: 'column', gap: 8,
     padding: '4px 0',
   },
   exampleBtn: {
     background: T.bgSubtle,
     border: `1px solid ${T.border}`,
-    borderRadius: 20, padding: '8px 16px',
+    borderRadius: 20, padding: '10px 18px',
     fontFamily: "'Lato', sans-serif",
-    fontSize: 13, fontWeight: 400,
+    fontSize: 15, fontWeight: 400,
     color: T.inkMid, cursor: 'pointer',
     textAlign: 'left', transition: 'background 0.15s',
     alignSelf: 'flex-start',
@@ -272,10 +272,10 @@ const S = {
   },
   toolbarBtn: {
     fontFamily: "'Lato', sans-serif",
-    fontSize: 9, fontWeight: 700, letterSpacing: 1.5,
+    fontSize: 10, fontWeight: 700, letterSpacing: 1.5,
     textTransform: 'uppercase', color: T.inkMid,
     background: T.bgSubtle, border: `1px solid ${T.border}`,
-    borderRadius: 20, padding: '5px 11px',
+    borderRadius: 20, padding: '6px 13px',
     cursor: 'pointer', whiteSpace: 'nowrap',
     transition: 'background 0.15s',
   },
@@ -287,8 +287,8 @@ const S = {
   textarea: {
     flex: 1, background: T.white,
     border: `1px solid ${T.border}`, borderRadius: 20,
-    padding: '9px 16px', fontFamily: "'Lato', sans-serif",
-    fontSize: 13, fontWeight: 300, color: T.ink,
+    padding: '10px 18px', fontFamily: "'Lato', sans-serif",
+    fontSize: 15, fontWeight: 400, color: T.ink,
     resize: 'none', outline: 'none', maxHeight: 120,
     lineHeight: 1.5, overflowY: 'auto',
   },
