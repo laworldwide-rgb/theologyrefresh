@@ -642,7 +642,11 @@ function App() {
     // ── Header ─────────────────────────────────────────
     h('div', { style: S.header },
       h('div', { style: S.headerLeft },
-        h('div', { style: S.wordmark },
+        h('div', {
+          style: { ...S.wordmark, cursor: 'pointer' },
+          onClick: () => { setLevel(null); setMessages([]); setSwitchNote(null); track('home_clicked') },
+          title: 'Back to level selector',
+        },
           'Theology ', h('span', { style: S.wordmarkRE }, 'RE'), '-fresh'
         ),
         // Level pill — opens level switcher popover
