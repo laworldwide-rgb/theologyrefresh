@@ -18,39 +18,37 @@ function track(event, props = {}) {
 }
 const h = React.createElement
 
-// ── Design tokens ─────────────────────────────────────────
+// ── Design tokens — Reformed Modern ───────────────────────
 const T = {
-  bg:        '#faf7f2',
-  bgSubtle:  '#eef3f9',
-  bgMid:     '#dce6f0',
-  slate:     '#3d5a7a',
-  slateDark: '#2a3f58',
-  slateDeep: '#1e3048',
-  sage:      '#5b8a6a',
-  sageLight: '#c0dac8',
-  sky:       '#b8cfe8',
-  skyLight:  '#e2ecf7',
-  ink:       '#1e3048',
-  inkMid:    '#4a5f72',
-  inkLight:  '#6b7f94',
-  border:    '#d0dcec',
+  bg:        '#faf7f2',   // parchment
+  bgSubtle:  '#f0ece4',   // slightly deeper parchment for input area
+  navy:      '#1e3a5c',   // header, active buttons, send
+  navyDark:  '#142a44',   // hover states
+  navyLight: '#2a4e78',   // secondary navy
+  gold:      '#7ec8e3',   // RE accent (sky blue — keeps brand)
+  ink:       '#0f1e2e',   // primary text
+  inkMid:    '#3a5068',   // secondary text
+  inkLight:  '#6a8090',   // placeholder / muted
+  border:    '#ddd5c8',   // parchment-toned border
+  cardBg:    '#ffffff',   // white cards
   white:     '#ffffff',
+  userBubble:'#1e3a5c',
+  botBubble: '#ffffff',
 }
+
+// ── Roman numerals per level ───────────────────────────────
+const ROMAN = { explorer: 'I', teacher: 'II', scholar: 'III' }
 
 // ── Level config ──────────────────────────────────────────
 const LEVELS = {
   explorer: {
-    label:       'Explorer',
-    desc:        'New to faith and theology',
-    pillBg:      T.skyLight,
-    pillColor:   T.slate,
-    pillBorder:  T.sky,
-    btnBg:       T.bgSubtle,
-    btnBorder:   `1px solid ${T.border}`,
-    btnNameColor:T.slateDark,
-    btnDescColor:T.inkMid,
-    placeholder: 'Ask Prof. Lewis anything — no question is too basic…',
-    welcome:     'Prof. Lewis is ready. Ask anything — there are no wrong questions here.',
+    label:        'Explorer',
+    desc:         'New to faith and theology',
+    pillBg:       'rgba(255,255,255,0.18)',
+    pillColor:    '#ffffff',
+    pillBorder:   'rgba(255,255,255,0.35)',
+    placeholder:  'Ask Prof. Lewis anything — no question is too basic…',
+    welcome:      'Prof. Lewis is ready. Ask anything — there are no wrong questions here.',
     examples: [
       'What does it mean to be saved?',
       'Why do Christians go to church?',
@@ -59,17 +57,13 @@ const LEVELS = {
     ],
   },
   teacher: {
-    label:       'Teacher',
-    desc:        'Theologically literate',
-    pillBg:      T.slate,
-    pillColor:   T.skyLight,
-    pillBorder:  T.slateDark,
-    btnBg:       T.slate,
-    btnBorder:   'none',
-    btnNameColor:'#e8f0f9',
-    btnDescColor:'#a8c0d8',
-    placeholder: 'Ask Prof. Lewis anything…',
-    welcome:     'Welcome back to the classroom. What are we working through today?',
+    label:        'Teacher',
+    desc:         'Theologically literate',
+    pillBg:       'rgba(255,255,255,0.18)',
+    pillColor:    '#ffffff',
+    pillBorder:   'rgba(255,255,255,0.35)',
+    placeholder:  'Ask Prof. Lewis anything…',
+    welcome:      'Welcome back to the classroom. What are we working through today?',
     examples: [
       'Did the early church believe in the rapture?',
       'What is the difference between Law and Gospel?',
@@ -77,17 +71,13 @@ const LEVELS = {
     ],
   },
   scholar: {
-    label:       'Scholar',
-    desc:        'Advanced academic study',
-    pillBg:      T.slateDeep,
-    pillColor:   T.skyLight,
-    pillBorder:  T.slate,
-    btnBg:       T.sage,
-    btnBorder:   'none',
-    btnNameColor:'#e8f5ee',
-    btnDescColor:'#c0dac8',
-    placeholder: 'The floor is yours…',
-    welcome:     'Colleague. What are we working on?',
+    label:        'Scholar',
+    desc:         'Advanced academic study',
+    pillBg:       'rgba(255,255,255,0.18)',
+    pillColor:    '#ffffff',
+    pillBorder:   'rgba(255,255,255,0.35)',
+    placeholder:  'The floor is yours…',
+    welcome:      'Colleague. What are we working on?',
     examples: [
       'What is the πίστις Χριστοῦ debate and where do you land?',
       'How does the LXX use of κύριος inform Pauline Christology?',
@@ -96,9 +86,8 @@ const LEVELS = {
   },
 }
 
-// ── Styles (object → inline) ──────────────────────────────
+// ── Styles — Reformed Modern ──────────────────────────────
 const S = {
-  // App shell
   app: {
     display: 'flex', flexDirection: 'column',
     height: '100dvh', maxWidth: 480,
@@ -106,116 +95,131 @@ const S = {
     position: 'relative', overflow: 'hidden',
   },
 
-  // Header
+  // Header — solid navy
   header: {
     display: 'flex', alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '10px 16px',
-    background: T.bg,
-    borderBottom: `1px solid ${T.border}`,
+    padding: '14px 20px',
+    background: T.navy,
     flexShrink: 0, zIndex: 10,
   },
-  headerLeft:  { display: 'flex', alignItems: 'center', gap: 10 },
-  headerRight: { display: 'flex', alignItems: 'center', gap: 6 },
+  headerLeft:  { display: 'flex', alignItems: 'center', gap: 12 },
+  headerRight: { display: 'flex', alignItems: 'center', gap: 8 },
   wordmark: {
-    fontFamily: "'Cormorant SC', serif",
-    fontSize: 16, fontWeight: 500,
-    color: T.slateDeep, letterSpacing: 0.5,
-    userSelect: 'none',
+    fontFamily: "'DM Sans', 'Lato', sans-serif",
+    fontSize: 17, fontWeight: 700,
+    color: '#ffffff', letterSpacing: -0.3,
+    userSelect: 'none', cursor: 'pointer',
   },
-  wordmarkRE: { color: T.slate },
+  wordmarkRE: { color: '#7ec8e3' },
 
-  pill: (lvl) => ({
-    fontFamily: "'Lato', sans-serif",
-    fontSize: 9, fontWeight: 700,
-    letterSpacing: 2, textTransform: 'uppercase',
-    padding: '3px 10px', borderRadius: 20,
-    background: LEVELS[lvl].pillBg,
-    color: LEVELS[lvl].pillColor,
-    border: `1px solid ${LEVELS[lvl].pillBorder}`,
-    cursor: 'pointer', transition: 'opacity 0.15s',
+  pill: () => ({
+    fontFamily: "'DM Sans', 'Lato', sans-serif",
+    fontSize: 11, fontWeight: 700,
+    letterSpacing: 1, textTransform: 'uppercase',
+    padding: '5px 13px', borderRadius: 20,
+    background: 'rgba(255,255,255,0.15)',
+    color: '#ffffff',
+    border: '1px solid rgba(255,255,255,0.3)',
+    cursor: 'pointer', transition: 'background 0.15s',
   }),
 
   iconBtn: {
-    width: 30, height: 30, borderRadius: '50%',
-    border: `1px solid ${T.border}`,
-    background: T.bgSubtle, color: T.inkMid,
-    fontSize: 14, cursor: 'pointer',
+    width: 34, height: 34, borderRadius: '50%',
+    border: '1px solid rgba(255,255,255,0.25)',
+    background: 'rgba(255,255,255,0.1)',
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 16, cursor: 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     transition: 'background 0.15s', flexShrink: 0,
   },
 
-  // Level selector screen
+  // Level selector
   levelScreen: {
     flex: 1, display: 'flex', flexDirection: 'column',
-    alignItems: 'center', justifyContent: 'center',
-    padding: '32px 28px 48px', background: T.bg,
+    padding: '32px 22px 40px', background: T.bg,
     overflowY: 'auto',
   },
+  levelKicker: {
+    fontFamily: "'DM Sans', 'Lato', sans-serif",
+    fontSize: 11, fontWeight: 700, letterSpacing: 3,
+    textTransform: 'uppercase', color: T.navy,
+    borderLeft: `4px solid ${T.navy}`,
+    paddingLeft: 10, marginBottom: 14,
+  },
   levelHeadingLine: {
-    fontFamily: "'Cormorant Garamond', serif",
-    fontSize: 30, fontWeight: 300, fontStyle: 'italic',
-    color: T.ink, textAlign: 'center',
-    lineHeight: 1.25, marginBottom: 4,
+    fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif",
+    fontSize: 32, fontWeight: 700,
+    color: T.ink, lineHeight: 1.15, marginBottom: 4,
   },
   levelSub: {
-    fontFamily: "'Lato', sans-serif",
-    fontSize: 14, fontWeight: 300,
-    color: T.inkLight, textAlign: 'center',
-    marginTop: 8, marginBottom: 36,
+    fontFamily: "'DM Sans', 'Lato', sans-serif",
+    fontSize: 15, fontWeight: 400,
+    color: T.inkLight, marginBottom: 28, marginTop: 6,
   },
-  levelButtons: { display: 'flex', flexDirection: 'column', gap: 12, width: '100%' },
+  levelButtons: { display: 'flex', flexDirection: 'column', gap: 12 },
 
-  lvlBtn: (key) => ({
+  lvlBtn: (key, isActive) => ({
     width: '100%', padding: '18px 20px',
-    borderRadius: 12,
-    background: LEVELS[key].btnBg,
-    border: LEVELS[key].btnBorder,
+    borderRadius: 12, border: 'none',
+    background: isActive ? T.navy : T.cardBg,
     cursor: 'pointer', textAlign: 'left',
     display: 'flex', alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'space-between', gap: 14,
+    boxShadow: isActive
+      ? '0 6px 24px rgba(30,58,92,0.35)'
+      : '0 2px 8px rgba(15,30,46,0.08)',
     transition: 'transform 0.15s, box-shadow 0.15s',
-    boxShadow: key !== 'explorer' ? '0 4px 20px rgba(0,0,0,0.15)' : 'none',
   }),
-  lvlBtnName: (key) => ({
-    fontFamily: "'Cormorant SC', serif",
-    fontSize: 18, fontWeight: 500, letterSpacing: 1,
-    color: LEVELS[key].btnNameColor, display: 'block', marginBottom: 3,
+  lvlBtnLeft: { display: 'flex', alignItems: 'center', gap: 16 },
+  lvlBtnRoman: (isActive) => ({
+    fontFamily: "'Playfair Display', Georgia, serif",
+    fontSize: 28, fontWeight: 700,
+    color: isActive ? 'rgba(255,255,255,0.35)' : T.border,
+    flexShrink: 0, width: 32, textAlign: 'center',
+    lineHeight: 1,
   }),
-  lvlBtnDesc: (key) => ({
-    fontFamily: "'Lato', sans-serif",
-    fontSize: 13, fontWeight: 300,
-    color: LEVELS[key].btnDescColor, display: 'block', opacity: 0.8,
+  lvlBtnName: (isActive) => ({
+    fontFamily: "'DM Sans', 'Lato', sans-serif",
+    fontSize: 18, fontWeight: 700,
+    color: isActive ? '#ffffff' : T.ink,
+    display: 'block', marginBottom: 3,
   }),
-  lvlBtnArrow: (key) => ({
-    fontSize: 18, color: LEVELS[key].btnDescColor, opacity: 0.5, flexShrink: 0,
+  lvlBtnDesc: (isActive) => ({
+    fontFamily: "'DM Sans', 'Lato', sans-serif",
+    fontSize: 13, fontWeight: 400,
+    color: isActive ? 'rgba(255,255,255,0.6)' : T.inkLight,
+    display: 'block',
+  }),
+  lvlBtnChevron: (isActive) => ({
+    fontSize: 22, color: isActive ? 'rgba(255,255,255,0.4)' : T.border,
+    flexShrink: 0,
   }),
 
   // Chat area
   chatArea: {
     flex: 1, overflowY: 'auto',
-    padding: '16px 14px',
-    display: 'flex', flexDirection: 'column', gap: 14,
+    padding: '18px 16px',
+    display: 'flex', flexDirection: 'column', gap: 16,
   },
   systemNote: {
-    fontFamily: "'Cormorant Garamond', serif",
-    fontSize: 19, fontStyle: 'italic',
-    color: T.inkMid, textAlign: 'center',
-    padding: '4px 24px 16px', lineHeight: 1.5,
+    fontFamily: "'Playfair Display', 'Cormorant Garamond', Georgia, serif",
+    fontSize: 18, fontStyle: 'italic',
+    color: T.inkLight, textAlign: 'center',
+    padding: '4px 16px 12px', lineHeight: 1.55,
   },
   switchNotice: {
     display: 'flex', alignItems: 'center', gap: 8,
-    padding: '7px 14px', background: T.skyLight,
+    padding: '8px 16px', background: T.navy,
     borderRadius: 20, alignSelf: 'center',
-    border: `1px solid ${T.sky}`,
-    fontFamily: "'Lato', sans-serif",
+    fontFamily: "'DM Sans', 'Lato', sans-serif",
     fontSize: 11, fontWeight: 700, letterSpacing: 1.5,
-    textTransform: 'uppercase', color: T.slate,
-    flexShrink: 0,
+    textTransform: 'uppercase', color: '#ffffff',
+    flexShrink: 0, opacity: 0.85,
   },
   switchDot: {
     width: 6, height: 6, borderRadius: '50%',
-    background: T.slate, flexShrink: 0,
+    background: '#7ec8e3', flexShrink: 0,
   },
 
   // Bubbles
@@ -224,26 +228,30 @@ const S = {
     alignItems: role === 'user' ? 'flex-end' : 'flex-start',
   }),
   bubbleSender: (role) => ({
-    fontFamily: "'Cormorant SC', serif",
-    fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
-    marginBottom: 4, paddingLeft: 4, paddingRight: 4,
-    color: role === 'user' ? T.slate : T.sage,
+    fontFamily: "'DM Sans', 'Lato', sans-serif",
+    fontSize: 11, fontWeight: 700, letterSpacing: 1.5,
+    textTransform: 'uppercase', marginBottom: 5,
+    paddingLeft: 4, paddingRight: 4,
+    color: role === 'user' ? T.navy : T.inkMid,
   }),
   bubble: (role) => ({
     maxWidth: '85%',
-    padding: '12px 16px',
-    borderRadius: role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-    fontFamily: "'Lato', sans-serif",
-    fontSize: 15, fontWeight: 400, lineHeight: 1.7,
-    background: role === 'user' ? T.slate : T.bgSubtle,
-    color: role === 'user' ? '#e8f0f9' : T.ink,
-    border: role === 'user' ? 'none' : `1px solid ${T.border}`,
+    padding: '14px 18px',
+    borderRadius: role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+    fontFamily: "'Libre Baskerville', 'Georgia', serif",
+    fontSize: 15, fontWeight: 400, lineHeight: 1.75,
+    background: role === 'user' ? T.userBubble : T.cardBg,
+    color: role === 'user' ? '#ffffff' : T.ink,
+    border: role === 'user' ? 'none' : `2px solid ${T.border}`,
     whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+    boxShadow: role === 'user'
+      ? '0 4px 16px rgba(30,58,92,0.25)'
+      : '0 2px 8px rgba(15,30,46,0.07)',
   }),
 
   // Typing indicator
   typingDot: (delay) => ({
-    width: 7, height: 7, borderRadius: '50%',
+    width: 8, height: 8, borderRadius: '50%',
     background: T.inkLight,
     animation: 'bounce 1.2s infinite',
     animationDelay: delay,
@@ -251,110 +259,111 @@ const S = {
 
   // Example questions
   examplesWrap: {
-    display: 'flex', flexDirection: 'column', gap: 8,
+    display: 'flex', flexDirection: 'column', gap: 10,
     padding: '4px 0',
   },
   exampleBtn: {
-    background: T.bgSubtle,
-    border: `1px solid ${T.border}`,
-    borderRadius: 20, padding: '10px 18px',
-    fontFamily: "'Lato', sans-serif",
-    fontSize: 15, fontWeight: 400,
+    background: T.cardBg,
+    border: `2px solid ${T.border}`,
+    borderRadius: 12, padding: '13px 18px',
+    fontFamily: "'DM Sans', 'Lato', sans-serif",
+    fontSize: 15, fontWeight: 500,
     color: T.inkMid, cursor: 'pointer',
-    textAlign: 'left', transition: 'background 0.15s',
-    alignSelf: 'flex-start',
+    textAlign: 'left', transition: 'border-color 0.15s, background 0.15s',
+    alignSelf: 'stretch', lineHeight: 1.4,
   },
 
   // Toolbar + input
   toolbar: {
-    display: 'flex', alignItems: 'center', gap: 6,
-    padding: '0 14px 8px', flexShrink: 0,
+    display: 'flex', alignItems: 'center', gap: 8,
+    padding: '0 16px 10px', flexShrink: 0,
   },
   toolbarBtn: {
-    fontFamily: "'Lato', sans-serif",
-    fontSize: 10, fontWeight: 700, letterSpacing: 1.5,
+    fontFamily: "'DM Sans', 'Lato', sans-serif",
+    fontSize: 11, fontWeight: 700, letterSpacing: 1,
     textTransform: 'uppercase', color: T.inkMid,
-    background: T.bgSubtle, border: `1px solid ${T.border}`,
-    borderRadius: 20, padding: '6px 13px',
+    background: T.cardBg, border: `2px solid ${T.border}`,
+    borderRadius: 8, padding: '7px 14px',
     cursor: 'pointer', whiteSpace: 'nowrap',
-    transition: 'background 0.15s',
+    transition: 'background 0.15s, border-color 0.15s',
   },
   inputRow: {
-    background: T.bgSubtle, borderTop: `1px solid ${T.border}`,
-    padding: '10px 14px', display: 'flex',
+    background: T.bgSubtle, borderTop: `2px solid ${T.border}`,
+    padding: '12px 16px', display: 'flex',
     gap: 10, alignItems: 'flex-end', flexShrink: 0,
   },
   textarea: {
-    flex: 1, background: T.white,
-    border: `1px solid ${T.border}`, borderRadius: 20,
-    padding: '10px 18px', fontFamily: "'Lato', sans-serif",
+    flex: 1, background: T.cardBg,
+    border: `2px solid ${T.border}`, borderRadius: 12,
+    padding: '11px 18px',
+    fontFamily: "'DM Sans', 'Lato', sans-serif",
     fontSize: 15, fontWeight: 400, color: T.ink,
     resize: 'none', outline: 'none', maxHeight: 120,
     lineHeight: 1.5, overflowY: 'auto',
   },
   sendBtn: (disabled) => ({
-    width: 36, height: 36, borderRadius: '50%',
-    background: disabled ? T.border : T.slate,
-    border: 'none', color: T.white, fontSize: 16,
+    width: 44, height: 44, borderRadius: 12,
+    background: disabled ? T.border : T.navy,
+    border: 'none', color: '#ffffff', fontSize: 18,
     cursor: disabled ? 'default' : 'pointer',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     flexShrink: 0, transition: 'background 0.15s',
-    boxShadow: disabled ? 'none' : '0 2px 8px rgba(61,90,122,0.3)',
+    boxShadow: disabled ? 'none' : '0 4px 12px rgba(30,58,92,0.3)',
   }),
 
   // Modal
   modalOverlay: {
     position: 'absolute', inset: 0,
-    background: 'rgba(30,48,72,0.55)',
+    background: 'rgba(15,30,46,0.6)',
     display: 'flex', alignItems: 'flex-end',
     zIndex: 100,
   },
   modalSheet: {
-    background: T.white,
+    background: T.cardBg,
     borderRadius: '20px 20px 0 0',
-    padding: '20px 24px 40px',
+    padding: '20px 24px 48px',
     width: '100%',
-    boxShadow: '0 -8px 40px rgba(30,48,72,0.2)',
+    boxShadow: '0 -8px 40px rgba(15,30,46,0.2)',
     maxHeight: '80vh', overflowY: 'auto',
   },
   modalHandle: {
-    width: 36, height: 4, background: T.border,
-    borderRadius: 2, margin: '0 auto 20px',
+    width: 40, height: 5, background: T.border,
+    borderRadius: 3, margin: '0 auto 22px',
   },
   modalTitle: {
-    fontFamily: "'Cormorant SC', serif",
-    fontSize: 14, letterSpacing: 2, color: T.slateDeep, marginBottom: 12,
+    fontFamily: "'Playfair Display', Georgia, serif",
+    fontSize: 20, fontWeight: 700, color: T.ink, marginBottom: 14,
   },
   modalBody: {
-    fontFamily: "'Lato', sans-serif",
-    fontSize: 12, fontWeight: 300, color: T.inkMid,
-    lineHeight: 1.75, marginBottom: 16,
+    fontFamily: "'DM Sans', 'Lato', sans-serif",
+    fontSize: 14, fontWeight: 400, color: T.inkMid,
+    lineHeight: 1.75, marginBottom: 18,
   },
   modalCopy: {
-    fontFamily: "'Lato', sans-serif",
-    fontSize: 10, color: T.inkLight, letterSpacing: 0.5,
-    borderTop: `1px solid ${T.border}`, paddingTop: 14,
+    fontFamily: "'DM Sans', 'Lato', sans-serif",
+    fontSize: 11, color: T.inkLight,
+    borderTop: `1px solid ${T.border}`, paddingTop: 16,
   },
 
   // A2HS
   a2hsBanner: {
-    position: 'absolute', bottom: 80, left: 14, right: 14,
-    background: T.slateDeep, color: T.skyLight,
-    borderRadius: 12, padding: '12px 16px',
+    position: 'absolute', bottom: 90, left: 16, right: 16,
+    background: T.navy, color: '#ffffff',
+    borderRadius: 14, padding: '14px 18px',
     display: 'flex', alignItems: 'center',
     justifyContent: 'space-between',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.3)', zIndex: 50,
+    boxShadow: '0 8px 32px rgba(15,30,46,0.4)', zIndex: 50,
   },
   a2hsText: {
-    fontFamily: "'Lato', sans-serif",
-    fontSize: 12, fontWeight: 300, color: T.skyLight,
+    fontFamily: "'DM Sans', 'Lato', sans-serif",
+    fontSize: 13, fontWeight: 400, color: 'rgba(255,255,255,0.85)',
   },
   a2hsBtn: {
-    fontFamily: "'Lato', sans-serif",
-    fontSize: 11, fontWeight: 700, letterSpacing: 1,
-    background: T.slate, color: T.white,
-    border: 'none', borderRadius: 20,
-    padding: '6px 14px', cursor: 'pointer',
+    fontFamily: "'DM Sans', 'Lato', sans-serif",
+    fontSize: 12, fontWeight: 700, letterSpacing: 0.5,
+    background: '#7ec8e3', color: T.navy,
+    border: 'none', borderRadius: 8,
+    padding: '7px 16px', cursor: 'pointer',
     flexShrink: 0, marginLeft: 12,
   },
 }
@@ -562,7 +571,6 @@ function App() {
   // ── Level selector ────────────────────────────────────
   if (!level) {
     return h('div', { style: S.app },
-      // Header (no pill yet)
       h('div', { style: S.header },
         h('div', { style: S.headerLeft },
           h('div', { style: S.wordmark },
@@ -574,32 +582,40 @@ function App() {
         )
       ),
 
-      // Level selector
       h('div', { style: S.levelScreen },
-        h('div', { style: S.levelHeadingLine }, 'Refresh your theology.'),
-        h('div', { style: S.levelHeadingLine }, 'Refresh your knowledge.'),
-        h('div', { style: S.levelHeadingLine }, 'Refresh your faith.'),
-        h('p',   { style: S.levelSub }, 'Choose your level to begin.'),
+        h('div', { style: S.levelKicker }, 'Choose your level'),
+        h('div', { style: S.levelHeadingLine }, 'Refresh your'),
+        h('div', { style: { ...S.levelHeadingLine, color: T.navy, marginBottom: 0 } }, 'theology.'),
+        h('p', { style: S.levelSub }, 'Prof. Lewis meets you where you are.'),
         h('div', { style: S.levelButtons },
-          Object.keys(LEVELS).map(key =>
-            h('button', {
+          Object.keys(LEVELS).map((key, idx) => {
+            const isActive = idx === 1 // Teacher highlighted by default as example
+            return h('button', {
               key,
-              style: S.lvlBtn(key),
+              style: S.lvlBtn(key, false),
               onClick: () => chooseLevel(key),
-              onMouseEnter: e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.18)' },
-              onMouseLeave: e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = key !== 'explorer' ? '0 4px 20px rgba(0,0,0,0.15)' : 'none' },
+              onMouseEnter: e => {
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(30,58,92,0.2)'
+              },
+              onMouseLeave: e => {
+                e.currentTarget.style.transform = ''
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(15,30,46,0.08)'
+              },
             },
-              h('div', { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
-                h('span', { style: S.lvlBtnName(key) }, LEVELS[key].label),
-                h('span', { style: S.lvlBtnDesc(key) }, LEVELS[key].desc),
+              h('div', { style: S.lvlBtnLeft },
+                h('span', { style: S.lvlBtnRoman(false) }, ROMAN[key]),
+                h('div', {},
+                  h('span', { style: S.lvlBtnName(false) }, LEVELS[key].label),
+                  h('span', { style: S.lvlBtnDesc(false) }, LEVELS[key].desc),
+                )
               ),
-              h('span', { style: S.lvlBtnArrow(key) }, '→'),
+              h('span', { style: S.lvlBtnChevron(false) }, '›'),
             )
-          )
+          })
         )
       ),
 
-      // About modal
       showAbout && h(AboutModal, { onClose: () => setShowAbout(false) }),
     )
   }
@@ -733,23 +749,22 @@ function App() {
 // ── Level Switcher Popover ────────────────────────────────
 function LevelSwitcher({ currentLevel, onSwitch }) {
   const [open, setOpen] = useState(false)
-  const cfg = LEVELS[currentLevel]
 
   return h('div', { style: { position: 'relative' } },
     h('button', {
-      style: S.pill(currentLevel),
+      style: S.pill(),
       onClick: () => setOpen(o => !o),
       title: 'Switch level',
-    }, cfg.label),
+    }, LEVELS[currentLevel].label),
 
     open && h('div', {
       style: {
         position: 'absolute', top: '110%', left: 0,
-        background: T.white,
-        border: `1px solid ${T.border}`,
+        background: T.cardBg,
+        border: `2px solid ${T.border}`,
         borderRadius: 12, padding: 8,
-        boxShadow: '0 8px 32px rgba(30,48,72,0.18)',
-        zIndex: 200, minWidth: 180,
+        boxShadow: '0 12px 40px rgba(15,30,46,0.2)',
+        zIndex: 200, minWidth: 200,
       }
     },
       Object.keys(LEVELS).map(key =>
@@ -757,29 +772,42 @@ function LevelSwitcher({ currentLevel, onSwitch }) {
           key,
           style: {
             width: '100%', textAlign: 'left',
-            padding: '9px 12px', borderRadius: 8,
+            padding: '11px 14px', borderRadius: 8,
             border: 'none',
-            background: key === currentLevel ? T.bgSubtle : 'transparent',
+            background: key === currentLevel ? T.navy : 'transparent',
             cursor: 'pointer',
-            display: 'flex', flexDirection: 'column', gap: 1,
+            display: 'flex', alignItems: 'center', gap: 12,
+            transition: 'background 0.1s',
           },
           onClick: () => { onSwitch(key); setOpen(false) },
-          onMouseEnter: e => { if (key !== currentLevel) e.currentTarget.style.background = T.bgSubtle },
+          onMouseEnter: e => { if (key !== currentLevel) e.currentTarget.style.background = '#f0ece4' },
           onMouseLeave: e => { if (key !== currentLevel) e.currentTarget.style.background = 'transparent' },
         },
           h('span', {
             style: {
-              fontFamily: "'Cormorant SC', serif",
-              fontSize: 13, fontWeight: 500, letterSpacing: 1,
-              color: T.slateDeep,
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: 16, fontWeight: 700,
+              color: key === currentLevel ? 'rgba(255,255,255,0.4)' : T.border,
+              width: 20, flexShrink: 0,
             }
-          }, LEVELS[key].label),
-          h('span', {
-            style: {
-              fontFamily: "'Lato', sans-serif",
-              fontSize: 10, fontWeight: 300, color: T.inkLight,
-            }
-          }, LEVELS[key].desc),
+          }, ROMAN[key]),
+          h('div', {},
+            h('span', {
+              style: {
+                fontFamily: "'DM Sans', 'Lato', sans-serif",
+                fontSize: 14, fontWeight: 700,
+                color: key === currentLevel ? '#ffffff' : T.ink,
+                display: 'block',
+              }
+            }, LEVELS[key].label),
+            h('span', {
+              style: {
+                fontFamily: "'DM Sans', 'Lato', sans-serif",
+                fontSize: 11, fontWeight: 400,
+                color: key === currentLevel ? 'rgba(255,255,255,0.55)' : T.inkLight,
+              }
+            }, LEVELS[key].desc),
+          )
         )
       ),
       // Dismiss on outside click
