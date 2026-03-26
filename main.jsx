@@ -499,7 +499,18 @@ function App() {
 
   // Handle browser back button — go to level selector, not out of app
   useEffect(() => {
-    const onPopState = () => {
+    // Always ensure there is a base history entry at the bottom of the stack
+    // so back never exits the app entirely
+    window.history.replaceState({ tr: 'base' }, '')
+    if (level) {
+      window.history.pushState({ tr: 'chat', level }, '')
+    }
+
+    const onPopState = (e) => {
+      if (e.state?.tr === 'base' || !e.state?.tr) {
+        // At the base — push it back so the next back still lands here
+        window.history.pushState({ tr: 'base' }, '')
+      }
       setLevel(null)
       setMessages([])
       setSwitchNote(null)
