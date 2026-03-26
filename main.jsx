@@ -481,7 +481,11 @@ function App() {
 
   // Persist level
   useEffect(() => {
-    if (level) localStorage.setItem('tr-level', level)
+    if (level) {
+      localStorage.setItem('tr-level', level)
+    } else {
+      localStorage.removeItem('tr-level')
+    }
   }, [level])
 
   const chooseLevel = useCallback((key) => {
