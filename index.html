@@ -26,11 +26,26 @@
     html, body { height: 100%; overflow: hidden; }
     body {
       font-family: 'Lato', sans-serif;
-      background: #f9fafb;
+      background: #2a3f58;
       color: #1e3048;
       -webkit-font-smoothing: antialiased;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
     }
-    #root { height: 100%; display: flex; flex-direction: column; }
+    #root {
+      height: 100%;
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      background: #f9fafb;
+      box-shadow: 0 0 80px rgba(0,0,0,0.4);
+    }
+    @media (max-width: 520px) {
+      body { background: #f9fafb; }
+      #root { box-shadow: none; }
+    }
   </style>
 </head>
 <body>
