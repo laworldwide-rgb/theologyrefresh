@@ -716,11 +716,6 @@ function App() {
         h(LevelSwitcher, { currentLevel: level, onSwitch: switchLevel, threads }),
       ),
       h('div', { style: S.headerRight },
-        hasMessages && h('button', {
-          style: S.iconBtn,
-          title: 'Save conversation as PDF',
-          onClick: () => exportPDF(messages, level),
-        }, '↓'),
         h('button', {
           style: S.iconBtn,
           title: 'About',
@@ -758,6 +753,12 @@ function App() {
         onMouseEnter: e => { e.currentTarget.style.background = '#e8eef5'; e.currentTarget.style.borderColor = T.navy },
         onMouseLeave: e => { e.currentTarget.style.background = T.cardBg; e.currentTarget.style.borderColor = T.border },
       }, '＋ New Conversation'),
+      h('button', {
+        style: S.toolbarBtn,
+        onClick: () => exportPDF(messages, level),
+        onMouseEnter: e => { e.currentTarget.style.background = '#e8eef5'; e.currentTarget.style.borderColor = T.navy },
+        onMouseLeave: e => { e.currentTarget.style.background = T.cardBg; e.currentTarget.style.borderColor = T.border },
+      }, '↓ Save Conversation'),
     ),
 
     // ── Input ───────────────────────────────────────────
