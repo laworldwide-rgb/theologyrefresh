@@ -452,18 +452,41 @@ function exportPDF(messages, level) {
   track('pdf_exported', { level })
 }
 
+// ── localStorage helpers for per-level threads ────────────
+function loadThreads() {
+  try {
+    const stored = localStorage.getItem('tr-threads')
+    return stored ? JSON.parse(stored) : { explorer: [], teacher: [], scholar: [] }
+  } catch { return { explorer: [], teacher: [], scholar: [] } }
+}
+function saveThreads(threads) {
+  try { localStorage.setItem('tr-threads', JSON.stringify(threads)) } catch {}
+}
+
 // ── Main App ──────────────────────────────────────────────
 function App() {
   const [level,       setLevel]       = useState(() => localStorage.getItem('tr-level') || null)
-  const [messages,    setMessages]    = useState([])
+  const [threads,     setThreads]     = useState(() => loadThreads())
   const [input,       setInput]       = useState('')
   const [loading,     setLoading]     = useState(false)
   const [showAbout,   setShowAbout]   = useState(false)
+  const [showNewConvo,setShowNewConvo]= useState(false)
   const [deferredA2H, setDeferredA2H] = useState(null)
   const [showA2H,     setShowA2H]     = useState(false)
-  const [switchNote,  setSwitchNote]  = useState(null) // { from, to } for inline notice
   const bottomRef = useRef(null)
   const textareaRef = useRef(null)
+
+  // Current level's messages
+  const messages = level ? (threads[level] || []) : []
+
+  const setMessages = useCallback((updater) => {
+    setThreads(prev => {
+      const next = { ...prev }
+      next[level] = typeof updater === 'function' ? updater(prev[level] || []) : updater
+      saveThreads(next)
+      return next
+    })
+  }, [level])
 
   // PWA install prompt
   useEffect(() => {
@@ -488,7 +511,7 @@ function App() {
     }
   }, [])
 
-  // Persist level
+  // Persist level selection
   useEffect(() => {
     if (level) {
       localStorage.setItem('tr-level', level)
@@ -499,21 +522,13 @@ function App() {
 
   // Handle browser back button — go to level selector, not out of app
   useEffect(() => {
-    // Always ensure there is a base history entry at the bottom of the stack
-    // so back never exits the app entirely
     window.history.replaceState({ tr: 'base' }, '')
-    if (level) {
-      window.history.pushState({ tr: 'chat', level }, '')
-    }
-
+    if (level) window.history.pushState({ tr: 'chat', level }, '')
     const onPopState = (e) => {
       if (e.state?.tr === 'base' || !e.state?.tr) {
-        // At the base — push it back so the next back still lands here
         window.history.pushState({ tr: 'base' }, '')
       }
       setLevel(null)
-      setMessages([])
-      setSwitchNote(null)
     }
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
@@ -522,18 +537,14 @@ function App() {
   const chooseLevel = useCallback((key) => {
     track('level_selected', { level: key })
     setLevel(key)
-    setMessages([])
-    setSwitchNote(null)
-    // Push a history entry so back button returns here
-    window.history.pushState({ level: key }, '')
+    window.history.pushState({ tr: 'chat', level: key }, '')
   }, [])
 
   const switchLevel = useCallback((key) => {
     if (key === level) return
     track('level_switched', { from: level, to: key })
-    setSwitchNote({ from: LEVELS[level].label, to: LEVELS[key].label, insertAfter: messages.length })
     setLevel(key)
-  }, [level, messages.length])
+  }, [level])
 
   const sendMessage = useCallback(async (text) => {
     const trimmed = (text || input).trim()
@@ -542,8 +553,13 @@ function App() {
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
 
     const userMsg = { role: 'user', content: trimmed }
-    const next = [...messages, userMsg]
-    setMessages(next)
+    const currentMsgs = threads[level] || []
+    const next = [...currentMsgs, userMsg]
+    setThreads(prev => {
+      const updated = { ...prev, [level]: next }
+      saveThreads(updated)
+      return updated
+    })
     setLoading(true)
     track('message_sent', { level, words: trimmed.split(' ').length })
 
@@ -555,14 +571,22 @@ function App() {
       })
       const data = await res.json()
       const reply = data?.content?.[0]?.text || 'Something went wrong — please try again.'
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }])
+      setThreads(prev => {
+        const updated = { ...prev, [level]: [...next, { role: 'assistant', content: reply }] }
+        saveThreads(updated)
+        return updated
+      })
       track('message_received', { level })
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "I'm having trouble connecting. Please check your connection and try again." }])
+      setThreads(prev => {
+        const updated = { ...prev, [level]: [...next, { role: 'assistant', content: "I'm having trouble connecting. Please check your connection and try again." }] }
+        saveThreads(updated)
+        return updated
+      })
     } finally {
       setLoading(false)
     }
-  }, [input, messages, loading, level])
+  }, [input, threads, loading, level])
 
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -576,12 +600,6 @@ function App() {
     e.target.style.height = 'auto'
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
   }, [])
-
-  const newConversation = useCallback(() => {
-    setMessages([])
-    setSwitchNote(null)
-    track('new_conversation', { level })
-  }, [level])
 
   const installA2H = useCallback(async () => {
     if (!deferredA2H) return
@@ -612,8 +630,10 @@ function App() {
         h('div', { style: { ...S.levelHeadingLine, color: T.navy, marginBottom: 0 } }, 'theology.'),
         h('p', { style: S.levelSub }, 'Prof. Lewis meets you where you are.'),
         h('div', { style: S.levelButtons },
-          Object.keys(LEVELS).map((key, idx) => {
-            const isActive = idx === 1 // Teacher highlighted by default as example
+          Object.keys(LEVELS).map((key) => {
+            const threadLen = (threads[key] || []).length
+            const hasThread = threadLen > 0
+            const msgCount = Math.floor(threadLen / 2) // approximate exchanges
             return h('button', {
               key,
               style: S.lvlBtn(key, false),
@@ -634,7 +654,18 @@ function App() {
                   h('span', { style: S.lvlBtnDesc(false) }, LEVELS[key].desc),
                 )
               ),
-              h('span', { style: S.lvlBtnChevron(false) }, '›'),
+              h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                hasThread && h('span', {
+                  style: {
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 11, fontWeight: 700,
+                    color: T.navy, background: T.bgSubtle,
+                    border: `1px solid ${T.border}`,
+                    borderRadius: 20, padding: '2px 8px',
+                  }
+                }, `${msgCount} msg${msgCount !== 1 ? 's' : ''}`),
+                h('span', { style: S.lvlBtnChevron(false) }, '›'),
+              )
             )
           })
         )
@@ -648,18 +679,8 @@ function App() {
   const cfg = LEVELS[level]
   const hasMessages = messages.length > 0
 
-  // Build message list with optional switch notice injected
   const messageItems = []
   messages.forEach((msg, i) => {
-    // Insert switch notice before the first message after the switch
-    if (switchNote && i === switchNote.insertAfter) {
-      messageItems.push(
-        h('div', { key: 'switch-notice', style: S.switchNotice },
-          h('div', { style: S.switchDot }),
-          `Switched to ${switchNote.to} · conversation continues`
-        )
-      )
-    }
     const isUser = msg.role === 'user'
     const role = isUser ? 'user' : 'bot'
     messageItems.push(
@@ -672,7 +693,6 @@ function App() {
     )
   })
 
-  // Typing indicator at end if loading
   if (loading) {
     messageItems.push(
       h('div', { key: 'typing', style: S.bubbleRow('bot') },
@@ -688,13 +708,12 @@ function App() {
       h('div', { style: S.headerLeft },
         h('div', {
           style: { ...S.wordmark, cursor: 'pointer' },
-          onClick: () => { setLevel(null); setMessages([]); setSwitchNote(null); track('home_clicked') },
+          onClick: () => { setLevel(null); track('home_clicked') },
           title: 'Back to level selector',
         },
           'Theology ', h('span', { style: S.wordmarkRE }, 'RE'), '-fresh'
         ),
-        // Level pill — opens level switcher popover
-        h(LevelSwitcher, { currentLevel: level, onSwitch: switchLevel }),
+        h(LevelSwitcher, { currentLevel: level, onSwitch: switchLevel, threads }),
       ),
       h('div', { style: S.headerRight },
         hasMessages && h('button', {
@@ -719,10 +738,10 @@ function App() {
               cfg.examples.map((q, i) =>
                 h('button', {
                   key: i,
-                  style: { ...S.exampleBtn, fontWeight: 400, fontSize: 13, color: T.inkMid },
+                  style: { ...S.exampleBtn, fontWeight: 400, fontSize: 15, color: T.inkMid },
                   onClick: () => sendMessage(q),
-                  onMouseEnter: e => { e.currentTarget.style.background = T.skyLight },
-                  onMouseLeave: e => { e.currentTarget.style.background = T.bgSubtle },
+                  onMouseEnter: e => { e.currentTarget.style.background = '#e8eef5'; e.currentTarget.style.borderColor = T.navy },
+                  onMouseLeave: e => { e.currentTarget.style.background = T.cardBg; e.currentTarget.style.borderColor = T.border },
                 }, q)
               )
             )
@@ -731,13 +750,13 @@ function App() {
       h('div', { ref: bottomRef })
     ),
 
-    // ── Toolbar — only show when conversation has started ─
+    // ── Toolbar — only when conversation active ─────────
     hasMessages && h('div', { style: S.toolbar },
       h('button', {
         style: S.toolbarBtn,
-        onClick: newConversation,
-        onMouseEnter: e => { e.currentTarget.style.background = T.skyLight; e.currentTarget.style.color = T.slate },
-        onMouseLeave: e => { e.currentTarget.style.background = T.bgSubtle; e.currentTarget.style.color = T.inkMid },
+        onClick: () => setShowNewConvo(true),
+        onMouseEnter: e => { e.currentTarget.style.background = '#e8eef5'; e.currentTarget.style.borderColor = T.navy },
+        onMouseLeave: e => { e.currentTarget.style.background = T.cardBg; e.currentTarget.style.borderColor = T.border },
       }, '＋ New Conversation'),
     ),
 
@@ -761,8 +780,40 @@ function App() {
       }, '↑')
     ),
 
-    // ── Modals / overlays ───────────────────────────────
+    // ── Modals ──────────────────────────────────────────
     showAbout && h(AboutModal, { onClose: () => setShowAbout(false) }),
+    showNewConvo && h(NewConvoModal, {
+      level,
+      threads,
+      messages,
+      onClearOne: () => {
+        setThreads(prev => {
+          const updated = { ...prev, [level]: [] }
+          saveThreads(updated)
+          return updated
+        })
+        setShowNewConvo(false)
+        track('new_conversation', { level, scope: 'one' })
+      },
+      onClearAll: () => {
+        const empty = { explorer: [], teacher: [], scholar: [] }
+        setThreads(empty)
+        saveThreads(empty)
+        setShowNewConvo(false)
+        track('new_conversation', { level, scope: 'all' })
+      },
+      onSaveAndClear: () => {
+        exportPDF(messages, level)
+        setThreads(prev => {
+          const updated = { ...prev, [level]: [] }
+          saveThreads(updated)
+          return updated
+        })
+        setShowNewConvo(false)
+        track('new_conversation', { level, scope: 'save_and_clear' })
+      },
+      onCancel: () => setShowNewConvo(false),
+    }),
     showA2H && h(A2HBanner, {
       onInstall: installA2H,
       onDismiss: () => setShowA2H(false),
@@ -771,7 +822,7 @@ function App() {
 }
 
 // ── Level Switcher Popover ────────────────────────────────
-function LevelSwitcher({ currentLevel, onSwitch }) {
+function LevelSwitcher({ currentLevel, onSwitch, threads }) {
   const [open, setOpen] = useState(false)
 
   return h('div', { style: { position: 'relative' } },
@@ -788,57 +839,158 @@ function LevelSwitcher({ currentLevel, onSwitch }) {
         border: `2px solid ${T.border}`,
         borderRadius: 12, padding: 8,
         boxShadow: '0 12px 40px rgba(15,30,46,0.2)',
-        zIndex: 200, minWidth: 200,
+        zIndex: 200, minWidth: 210,
       }
     },
-      Object.keys(LEVELS).map(key =>
-        h('button', {
+      Object.keys(LEVELS).map(key => {
+        const isActive = key === currentLevel
+        const msgCount = Math.floor(((threads[key] || []).length) / 2)
+        const hasThread = msgCount > 0
+        return h('button', {
           key,
           style: {
             width: '100%', textAlign: 'left',
             padding: '11px 14px', borderRadius: 8,
             border: 'none',
-            background: key === currentLevel ? T.navy : 'transparent',
+            background: isActive ? T.navy : 'transparent',
             cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 12,
+            display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between',
             transition: 'background 0.1s',
           },
           onClick: () => { onSwitch(key); setOpen(false) },
-          onMouseEnter: e => { if (key !== currentLevel) e.currentTarget.style.background = '#f0ece4' },
-          onMouseLeave: e => { if (key !== currentLevel) e.currentTarget.style.background = 'transparent' },
+          onMouseEnter: e => { if (!isActive) e.currentTarget.style.background = '#f0ece4' },
+          onMouseLeave: e => { if (!isActive) e.currentTarget.style.background = 'transparent' },
         },
-          h('span', {
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 12 } },
+            h('span', {
+              style: {
+                fontFamily: "'Playfair Display', Georgia, serif",
+                fontSize: 16, fontWeight: 700,
+                color: isActive ? 'rgba(255,255,255,0.4)' : T.border,
+                width: 20, flexShrink: 0,
+              }
+            }, ROMAN[key]),
+            h('div', {},
+              h('span', {
+                style: {
+                  fontFamily: "'DM Sans', 'Lato', sans-serif",
+                  fontSize: 14, fontWeight: 700,
+                  color: isActive ? '#ffffff' : T.ink,
+                  display: 'block',
+                }
+              }, LEVELS[key].label),
+              h('span', {
+                style: {
+                  fontFamily: "'DM Sans', 'Lato', sans-serif",
+                  fontSize: 11, fontWeight: 400,
+                  color: isActive ? 'rgba(255,255,255,0.55)' : T.inkLight,
+                }
+              }, LEVELS[key].desc),
+            )
+          ),
+          hasThread && h('span', {
             style: {
-              fontFamily: "'Playfair Display', Georgia, serif",
-              fontSize: 16, fontWeight: 700,
-              color: key === currentLevel ? 'rgba(255,255,255,0.4)' : T.border,
-              width: 20, flexShrink: 0,
+              fontFamily: "'DM Sans', sans-serif",
+              fontSize: 10, fontWeight: 700,
+              color: isActive ? 'rgba(255,255,255,0.6)' : T.navy,
+              background: isActive ? 'rgba(255,255,255,0.15)' : T.bgSubtle,
+              border: isActive ? '1px solid rgba(255,255,255,0.2)' : `1px solid ${T.border}`,
+              borderRadius: 20, padding: '2px 7px', flexShrink: 0,
             }
-          }, ROMAN[key]),
-          h('div', {},
-            h('span', {
-              style: {
-                fontFamily: "'DM Sans', 'Lato', sans-serif",
-                fontSize: 14, fontWeight: 700,
-                color: key === currentLevel ? '#ffffff' : T.ink,
-                display: 'block',
-              }
-            }, LEVELS[key].label),
-            h('span', {
-              style: {
-                fontFamily: "'DM Sans', 'Lato', sans-serif",
-                fontSize: 11, fontWeight: 400,
-                color: key === currentLevel ? 'rgba(255,255,255,0.55)' : T.inkLight,
-              }
-            }, LEVELS[key].desc),
-          )
+          }, `${msgCount}`)
         )
-      ),
-      // Dismiss on outside click
+      }),
       h('div', {
         style: { position: 'fixed', inset: 0, zIndex: -1 },
         onClick: () => setOpen(false),
       })
+    )
+  )
+}
+
+// ── New Conversation Modal ────────────────────────────────
+function NewConvoModal({ level, threads, messages, onClearOne, onClearAll, onSaveAndClear, onCancel }) {
+  const hasOtherThreads = Object.entries(threads)
+    .some(([k, v]) => k !== level && v.length > 0)
+
+  return h('div', { style: S.modalOverlay, onClick: onCancel },
+    h('div', {
+      style: S.modalSheet,
+      onClick: e => e.stopPropagation(),
+    },
+      h('div', { style: S.modalHandle }),
+      h('p', { style: S.modalTitle }, 'New Conversation'),
+      h('p', { style: { ...S.modalBody, marginBottom: 20 } },
+        `Start fresh in ${LEVELS[level].label}? Choose how to handle the current conversation.`
+      ),
+
+      // Save & Clear
+      h('button', {
+        style: {
+          ...S.toolbarBtn,
+          width: '100%', textAlign: 'left',
+          padding: '14px 16px', borderRadius: 10,
+          marginBottom: 10, fontSize: 14,
+          display: 'flex', flexDirection: 'column', gap: 2,
+          background: T.navy, border: 'none', color: '#ffffff',
+        },
+        onClick: onSaveAndClear,
+      },
+        h('span', { style: { fontWeight: 700, color: '#ffffff' } }, '↓ Save PDF & clear this conversation'),
+        h('span', { style: { fontSize: 12, color: 'rgba(255,255,255,0.6)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 } },
+          'Downloads a PDF first, then starts fresh'
+        )
+      ),
+
+      // Clear this level only
+      h('button', {
+        style: {
+          ...S.toolbarBtn,
+          width: '100%', textAlign: 'left',
+          padding: '14px 16px', borderRadius: 10,
+          marginBottom: hasOtherThreads ? 10 : 16, fontSize: 14,
+          display: 'flex', flexDirection: 'column', gap: 2,
+        },
+        onClick: onClearOne,
+      },
+        h('span', { style: { fontWeight: 700, color: T.ink, textTransform: 'none', letterSpacing: 0, fontSize: 14 } },
+          `Clear ${LEVELS[level].label} conversation only`
+        ),
+        h('span', { style: { fontSize: 12, color: T.inkLight, fontWeight: 400 } },
+          'Other level conversations are kept'
+        )
+      ),
+
+      // Clear all — only shown if other threads exist
+      hasOtherThreads && h('button', {
+        style: {
+          ...S.toolbarBtn,
+          width: '100%', textAlign: 'left',
+          padding: '14px 16px', borderRadius: 10,
+          marginBottom: 16, fontSize: 14,
+          display: 'flex', flexDirection: 'column', gap: 2,
+          background: '#fff0f0', borderColor: '#f0c0c0',
+        },
+        onClick: onClearAll,
+      },
+        h('span', { style: { fontWeight: 700, color: '#c03030', textTransform: 'none', letterSpacing: 0, fontSize: 14 } },
+          'Clear all conversations'
+        ),
+        h('span', { style: { fontSize: 12, color: '#a05050', fontWeight: 400 } },
+          'Wipes Explorer, Teacher, and Scholar'
+        )
+      ),
+
+      // Cancel
+      h('button', {
+        style: { ...S.toolbarBtn, width: '100%', textAlign: 'center', padding: '12px', borderRadius: 10 },
+        onClick: onCancel,
+      }, 'Cancel'),
+
+      h('p', { style: S.modalCopy },
+        '© 2025 Ellery Aguayo · Theology RE-fresh is a ministry of Emerald City Sanctuary'
+      ),
     )
   )
 }
