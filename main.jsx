@@ -476,6 +476,7 @@ function App() {
   const [deferredA2H, setDeferredA2H] = useState(null)
   const [showA2H,     setShowA2H]     = useState(false)
   const bottomRef = useRef(null)
+  const lastBotRef = useRef(null)
   const textareaRef = useRef(null)
 
   // Current level's messages
@@ -501,9 +502,23 @@ function App() {
     if (deferredA2H && messages.length >= 3) setShowA2H(true)
   }, [deferredA2H, messages.length])
 
-  // Scroll to bottom on new messages
+  // Smart scroll — top of Lewis's answer for bot messages, bottom for user + typing
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (loading) {
+      // Typing indicator — scroll to bottom so it's visible
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    } else if (messages.length > 0) {
+      const lastMsg = messages[messages.length - 1]
+      if (lastMsg.role === 'assistant') {
+        // Scroll to top of Lewis's response so student reads from beginning
+        setTimeout(() => {
+          lastBotRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 50)
+      } else {
+        // User message — scroll to bottom
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }
+    }
   }, [messages, loading])
 
   // Register service worker
@@ -703,11 +718,13 @@ function App() {
   const hasMessages = messages.length > 0
 
   const messageItems = []
+  const lastBotIndex = messages.map(m => m.role).lastIndexOf('assistant')
   messages.forEach((msg, i) => {
     const isUser = msg.role === 'user'
     const role = isUser ? 'user' : 'bot'
+    const isLastBot = !isUser && i === lastBotIndex
     messageItems.push(
-      h('div', { key: i, style: S.bubbleRow(role) },
+      h('div', { key: i, style: S.bubbleRow(role), ref: isLastBot ? lastBotRef : null },
         h('div', { style: S.bubbleSender(role) }, isUser ? 'You' : 'Prof. Lewis'),
         h('div', { style: S.bubble(role) },
           h(BubbleContent, { text: msg.content })
