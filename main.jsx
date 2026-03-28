@@ -90,7 +90,9 @@ const LEVELS = {
 const S = {
   app: {
     display: 'flex', flexDirection: 'column',
-    height: '100dvh', maxWidth: 480,
+    height: '100dvh',
+    maxHeight: '-webkit-fill-available',
+    maxWidth: 480,
     margin: '0 auto', background: T.bg,
     position: 'relative', overflow: 'hidden',
   },
@@ -794,6 +796,12 @@ function App() {
         onChange: e => setInput(e.target.value),
         onKeyDown: handleKeyDown,
         disabled: loading,
+        onFocus: () => {
+          // Android keyboard pushes viewport — scroll input into view
+          setTimeout(() => {
+            textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+          }, 300)
+        },
       }),
       h('button', {
         style: S.sendBtn(!input.trim() || loading),
