@@ -668,6 +668,27 @@ function App() {
               )
             )
           })
+        ),
+
+        // ── Disclaimer ──────────────────────────────────
+        h('div', {
+          style: {
+            marginTop: 16,
+            background: T.cardBg,
+            borderRadius: 10,
+            borderLeft: `4px solid ${T.navy}`,
+            padding: '13px 14px',
+            boxShadow: '0 2px 8px rgba(15,30,46,0.06)',
+          }
+        },
+          h('p', {
+            style: {
+              fontFamily: "'Libre Baskerville', Georgia, serif",
+              fontSize: 12,
+              color: T.inkMid,
+              lineHeight: 1.8,
+            }
+          }, 'Theology RE-fresh is a study tool — not a replacement for your pastor, your church, or seminary training.')
         )
       ),
 
