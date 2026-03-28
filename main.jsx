@@ -50,10 +50,10 @@ const LEVELS = {
     placeholder:  'Ask Prof. Lewis anything — no question is too basic…',
     welcome:      'Prof. Lewis is ready. Ask anything — there are no wrong questions here.',
     examples: [
-      'What does it mean to be saved?',
-      'Why do Christians go to church?',
-      'Who wrote the Bible?',
-      'Why do bad things happen if God is good?',
+      'Is Jesus God?',
+      'Why does God allow suffering / evil?',
+      'How do I know I\'m saved?',
+      'Can you believe in science and Christianity?',
     ],
   },
   teacher: {
