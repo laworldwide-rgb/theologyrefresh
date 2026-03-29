@@ -606,7 +606,10 @@ function App() {
   }, [input, threads, loading, level])
 
   const handleKeyDown = useCallback((e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // Only intercept Enter on non-touch devices (desktop keyboards)
+    // On mobile, Enter/Return should insert a newline as expected
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
+    if (e.key === 'Enter' && !e.shiftKey && !isTouchDevice) {
       e.preventDefault()
       sendMessage()
     }
