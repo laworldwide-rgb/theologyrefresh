@@ -478,6 +478,10 @@ function App() {
   const bottomRef = useRef(null)
   const lastBotRef = useRef(null)
   const textareaRef = useRef(null)
+  const fileInputRef = useRef(null)
+
+  // File attachment state
+  const [attachment, setAttachment] = useState(null) // { name, type, base64, mediaType }
 
   // Current level's messages
   const messages = level ? (threads[level] || []) : []
@@ -563,53 +567,134 @@ function App() {
     setLevel(key)
   }, [level])
 
+  // ── File attachment handler ──────────────────────────────
+  const handleFileSelect = useCallback((e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const MAX_PDF = 32 * 1024 * 1024
+    const MAX_IMG = 20 * 1024 * 1024
+
+    const isPDF = file.type === 'application/pdf'
+    const isImage = file.type.startsWith('image/')
+
+    if (!isPDF && !isImage) {
+      alert('Please attach a PDF or image file.')
+      return
+    }
+    if (isPDF && file.size > MAX_PDF) {
+      alert('PDF must be under 32MB.')
+      return
+    }
+    if (isImage && file.size > MAX_IMG) {
+      alert('Image must be under 20MB.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1]
+      setAttachment({
+        name: file.name,
+        type: isPDF ? 'pdf' : 'image',
+        base64,
+        mediaType: file.type,
+      })
+    }
+    reader.readAsDataURL(file)
+    // Reset input so same file can be re-selected
+    e.target.value = ''
+    track('file_attached', { level, fileType: isPDF ? 'pdf' : 'image' })
+  }, [level])
+
   const sendMessage = useCallback(async (text) => {
     const trimmed = (text || input).trim()
-    if (!trimmed || loading) return
+    const hasAttachment = !!attachment
+    if (!trimmed && !hasAttachment) return
+    if (loading) return
+
     setInput('')
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
 
-    const userMsg = { role: 'user', content: trimmed }
+    // Build user message content — multi-part if file attached
+    let userContent
+    if (hasAttachment) {
+      const parts = []
+      if (attachment.type === 'pdf') {
+        parts.push({
+          type: 'document',
+          source: { type: 'base64', media_type: 'application/pdf', data: attachment.base64 }
+        })
+      } else {
+        parts.push({
+          type: 'image',
+          source: { type: 'base64', media_type: attachment.mediaType, data: attachment.base64 }
+        })
+      }
+      parts.push({
+        type: 'text',
+        text: trimmed || `[Attached: ${attachment.name}]`
+      })
+      userContent = parts
+    } else {
+      userContent = trimmed
+    }
+
+    // Display version for chat history (always text)
+    const displayText = trimmed
+      ? (hasAttachment ? `📎 ${attachment.name}\n\n${trimmed}` : trimmed)
+      : `📎 ${attachment.name}`
+
+    const userMsg = { role: 'user', content: displayText }
+    const apiMsg  = { role: 'user', content: userContent }
+
+    setAttachment(null)
+
     const currentMsgs = threads[level] || []
-    const next = [...currentMsgs, userMsg]
+    const displayNext = [...currentMsgs, userMsg]
     setThreads(prev => {
-      const updated = { ...prev, [level]: next }
+      const updated = { ...prev, [level]: displayNext }
       saveThreads(updated)
       return updated
     })
     setLoading(true)
-    track('message_sent', { level, words: trimmed.split(' ').length })
+    track('message_sent', { level, words: trimmed.split(' ').length, hasFile: hasAttachment })
+
+    // API history uses display messages except we replace the last with the API version
+    const apiHistory = [...currentMsgs, apiMsg]
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: next, level })
+        body: JSON.stringify({ messages: apiHistory, level })
       })
       const data = await res.json()
       const reply = data?.content?.[0]?.text || 'Something went wrong — please try again.'
       setThreads(prev => {
-        const updated = { ...prev, [level]: [...next, { role: 'assistant', content: reply }] }
+        const updated = { ...prev, [level]: [...displayNext, { role: 'assistant', content: reply }] }
         saveThreads(updated)
         return updated
       })
       track('message_received', { level })
     } catch (err) {
       setThreads(prev => {
-        const updated = { ...prev, [level]: [...next, { role: 'assistant', content: "I'm having trouble connecting. Please check your connection and try again." }] }
+        const updated = { ...prev, [level]: [...displayNext, { role: 'assistant', content: "I'm having trouble connecting. Please check your connection and try again." }] }
         saveThreads(updated)
         return updated
       })
     } finally {
       setLoading(false)
     }
-  }, [input, threads, loading, level])
+  }, [input, attachment, threads, loading, level])
 
   const handleKeyDown = useCallback((e) => {
-    // Only intercept Enter on non-touch devices (desktop keyboards)
-    // On mobile, Enter/Return should insert a newline as expected
-    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
-    if (e.key === 'Enter' && !e.shiftKey && !isTouchDevice) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      // On touch devices (iOS, Android) — let Enter insert a newline naturally
+      // Only submit on desktop where a physical keyboard is present
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+      const isTouchOnly = ('ontouchstart' in window) && (navigator.maxTouchPoints > 0)
+      if (isMobile || isTouchOnly) return // let the browser handle it
       e.preventDefault()
       sendMessage()
     }
@@ -788,20 +873,67 @@ function App() {
       h('div', { ref: bottomRef })
     ),
 
-    // ── Toolbar — only when conversation active ─────────
-    hasMessages && h('div', { style: S.toolbar },
-      h('button', {
+    // ── Toolbar — always visible in chat ────────────────
+    h('div', { style: S.toolbar },
+      hasMessages && h('button', {
         style: S.toolbarBtn,
         onClick: () => setShowNewConvo(true),
         onMouseEnter: e => { e.currentTarget.style.background = '#e8eef5'; e.currentTarget.style.borderColor = T.navy },
         onMouseLeave: e => { e.currentTarget.style.background = T.cardBg; e.currentTarget.style.borderColor = T.border },
       }, '＋ New Conversation'),
-      h('button', {
+      hasMessages && h('button', {
         style: S.toolbarBtn,
         onClick: () => exportPDF(messages, level),
         onMouseEnter: e => { e.currentTarget.style.background = '#e8eef5'; e.currentTarget.style.borderColor = T.navy },
         onMouseLeave: e => { e.currentTarget.style.background = T.cardBg; e.currentTarget.style.borderColor = T.border },
       }, '↓ Save Conversation'),
+      h('button', {
+        style: { ...S.toolbarBtn, marginLeft: 'auto' },
+        onClick: () => fileInputRef.current?.click(),
+        onMouseEnter: e => { e.currentTarget.style.background = '#e8eef5'; e.currentTarget.style.borderColor = T.navy },
+        onMouseLeave: e => { e.currentTarget.style.background = T.cardBg; e.currentTarget.style.borderColor = T.border },
+      }, '📎 Attach'),
+      // Hidden file input
+      h('input', {
+        ref: fileInputRef,
+        type: 'file',
+        accept: 'application/pdf,image/*',
+        style: { display: 'none' },
+        onChange: handleFileSelect,
+      }),
+    ),
+
+    // ── Attachment preview ──────────────────────────────
+    attachment && h('div', {
+      style: {
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '6px 16px 0',
+        flexShrink: 0,
+      }
+    },
+      h('div', {
+        style: {
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: T.bgSubtle, border: `1px solid ${T.border}`,
+          borderRadius: 8, padding: '6px 12px',
+          fontFamily: "'DM Sans', sans-serif",
+          fontSize: 12, fontWeight: 500, color: T.inkMid,
+          maxWidth: '80%',
+        }
+      },
+        h('span', {}, attachment.type === 'pdf' ? '📄' : '🖼️'),
+        h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } },
+          attachment.name
+        ),
+        h('button', {
+          style: {
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: T.inkLight, fontSize: 14, lineHeight: 1,
+            padding: '0 0 0 4px', flexShrink: 0,
+          },
+          onClick: () => setAttachment(null),
+        }, '✕')
+      )
     ),
 
     // ── Input ───────────────────────────────────────────
@@ -810,23 +942,22 @@ function App() {
         ref: textareaRef,
         rows: 1,
         style: S.textarea,
-        placeholder: cfg.placeholder,
+        placeholder: attachment ? 'Add a message or just send the file…' : cfg.placeholder,
         value: input,
         onInput: handleTextareaInput,
         onChange: e => setInput(e.target.value),
         onKeyDown: handleKeyDown,
         disabled: loading,
         onFocus: () => {
-          // Android keyboard pushes viewport — scroll input into view
           setTimeout(() => {
             textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
           }, 300)
         },
       }),
       h('button', {
-        style: S.sendBtn(!input.trim() || loading),
+        style: S.sendBtn((!input.trim() && !attachment) || loading),
         onClick: () => sendMessage(),
-        disabled: !input.trim() || loading,
+        disabled: (!input.trim() && !attachment) || loading,
       }, '↑')
     ),
 
