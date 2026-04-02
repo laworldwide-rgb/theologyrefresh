@@ -92,9 +92,12 @@ const S = {
     display: 'flex', flexDirection: 'column',
     height: '100dvh',
     maxHeight: '-webkit-fill-available',
+    width: '100%',
     maxWidth: 480,
     margin: '0 auto', background: T.bg,
-    position: 'relative', overflow: 'hidden',
+    position: 'relative',
+    overflow: 'hidden',
+    overflowX: 'hidden',
   },
 
   // Header — solid navy
