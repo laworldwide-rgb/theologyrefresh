@@ -498,8 +498,14 @@ function App() {
     })
   }, [level])
 
-  // PWA install prompt
+  // PWA install prompt — only show if not already installed
   useEffect(() => {
+    const isStandalone =
+      window.navigator.standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches
+    if (isStandalone) return // already installed, never show banner
+
     const handler = e => { e.preventDefault(); setDeferredA2H(e) }
     window.addEventListener('beforeinstallprompt', handler)
     return () => window.removeEventListener('beforeinstallprompt', handler)
