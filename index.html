@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#3d5a7a" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -23,29 +23,42 @@
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; overflow-x: hidden; }
-    html { height: -webkit-fill-available; max-width: 100vw; }
+    html {
+      height: 100%;
+      height: -webkit-fill-available;
+      overflow: hidden;
+      overflow-x: hidden;
+    }
     body {
+      height: 100%;
+      height: -webkit-fill-available;
+      overflow: hidden;
+      overflow-x: hidden;
+      width: 100%;
+      max-width: 100vw;
       font-family: 'Lato', sans-serif;
       background: #1e3a5c;
       color: #1e3048;
       -webkit-font-smoothing: antialiased;
       display: flex;
-      align-items: stretch;
+      align-items: center;
       justify-content: center;
     }
     #root {
       height: 100%;
+      height: -webkit-fill-available;
       width: 100%;
       max-width: 520px;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       background: #faf7f2;
       box-shadow: 0 0 80px rgba(0,0,0,0.4);
+      overflow: hidden;
     }
     @media (max-width: 520px) {
-      body { background: #faf7f2; }
-      #root { box-shadow: none; }
+      body { background: #faf7f2; align-items: stretch; }
+      #root { max-width: 100%; box-shadow: none; }
     }
   </style>
 </head>
